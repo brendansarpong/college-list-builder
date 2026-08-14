@@ -1,49 +1,55 @@
-# College List Builder
+# College List Builder!
 
-Counselor pastes in a free-form description of a student, app generates a college list and
-hands back a downloadable PDF.
+A counselor pastes in a free-form description of a student, and the app spits out a
+college list as a downloadable PDF. Built for a take-home, but hopefully useful beyond that.
 
 ## How it works
 
-1. Free text goes to Claude, which extracts a structured student profile (GPA, SAT, interests, preferences, etc.) as JSON.
-2. A plain Python scoring function (`matching.py`) matches that profile against a small curated dataset of colleges (`data/colleges.json`) and buckets them into reach / target / safety. No LLM involved in this step on purpose -- it means the app can't hallucinate a college that doesn't exist or make up stats.
-3. Claude writes a short blurb for each *already-selected* school, using only the facts we hand it (so it can't invent facts about a real school either).
-4. `pdf_generator.py` renders the final list with reportlab and the Flask route streams it back as a file download.
+There are three steps, and only two of them touch an LLM on purpose:
+
+1. The free text goes to an LLM, which pulls out a structured student profile: GPA, SAT,
+   interests, preferences, that kind of thing — as JSON.
+2. A plain Python scoring function (`matching.py`) matches that profile against a curated
+   list of colleges (`data/colleges.json`) and sorts them into reach/target/safety.
+   No LLM involved here. This is deliberate — it means the app can't recommend a school
+   that doesn't exist or make up stats about a real one.
+3. The LLM writes a short blurb for each school that's already been picked, using only the
+   facts it's handed. Same idea... it can describe, but it can't invent.
+
+Then `pdf_generator.py` turns all of that into the PDF and the Flask route sends it back
+as a download.
 
 ## Running it locally
 
-1. `python3 -m venv venv && source venv/bin/activate`
-2. `pip install -r requirements.txt`
-3. Copy `.env.example` to `.env` and drop in a Groq API key (`GROQ_API_KEY=...`)
-4. `python app.py`
-5. Open `http://localhost:5000`
+1. `python -m venv venv`
+2. Activate it — `venv\Scripts\Activate.ps1` on Windows, `source venv/bin/activate` on Mac/Linux
+3. `pip install -r requirements.txt`
+4. Copy `.env.example` to `.env` and drop in a Groq API key (`GROQ_API_KEY=...`)
+5. `python app.py`
+6. Open `http://localhost:5000`
 
-Getting a key: console.groq.com, sign up, generate a key. New accounts generally come with
-some starter credit, which is more than enough for this (each generation is 2 short API calls).
-If you'd rather not touch a paid provider at all, `llm_client.py` is small enough to point at
-Groq's API instead (they have a genuinely free tier) -- same `messages.create`-style call, just
-swap the client and model name.
+Not super necessary since I got it running on Render
 
-## Deploying so it's not just localhost
+Get a key at console.groq.com — free tier, no card needed. Each generation is two short
+API calls, so you'll get a lot of runs out of it before you'd hit any limit.
 
-Easiest free path: push this to a GitHub repo, then deploy on Render.com's free web service tier
-(or Railway, both have no-spend tiers for something this small):
+## Deploying
 
-1. Push repo to GitHub.
-2. On Render: New -> Web Service -> connect the repo.
-3. Build command: `pip install -r requirements.txt`
-4. Start command: `gunicorn app:app` (add `gunicorn` to requirements.txt for production)
-5. Add `GROQ_API_KEY` as an environment variable in the Render dashboard.
-6. Deploy -- you'll get a public URL.
+This repo is set up to deploy on Render's free tier:
 
-For the interview itself, running it locally and screen-sharing is completely fine too, they
-said they'll extend the code live with you, so a local dev server is actually the more natural
-setup for that part.
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app`
+- Environment variable: `GROQ_API_KEY`
 
 ## Extending it
 
-- Add more schools: just append to `data/colleges.json`, no code changes needed.
-- Change how many reach/target/safety schools show up: `build_list()` in `matching.py` takes
-  `n_reach`, `n_target`, `n_safety` as arguments.
-- Tune the matching logic: the weights are in `score_college()` in `matching.py`.
-- Change the PDF layout/branding: `pdf_generator.py`, all reportlab `ParagraphStyle` objects at the top.
+- **Add a school:** just add an entry to `data/colleges.json`, no code changes needed.
+- **Change how many reach/target/safety schools show up:** `build_list()` in `matching.py`
+  takes `n_reach`, `n_target`, `n_safety` as arguments.
+- **Tune the matching logic:** weights live in `score_college()` in `matching.py`.
+- **Change the PDF layout:** `pdf_generator.py`, all the styling is in the `ParagraphStyle`
+  objects near the top of the file.
+
+The college dataset right now is a curated set of ~55 well-known schools rather than
+every accredited college in the US. This was intentional. I wanted a small pool of schools that could 
+be expanded in the future.
