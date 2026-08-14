@@ -50,6 +50,6 @@ This repo is set up to deploy on Render's free tier:
 - **Change the PDF layout:** `pdf_generator.py`, all the styling is in the `ParagraphStyle`
   objects near the top of the file.
 
-The college dataset right now is a curated set of ~55 well-known schools rather than
+The college dataset right now is a curated set of about 50 or so well-known schools rather than
 every accredited college in the US. This was intentional. I wanted a small pool of schools that could 
 be expanded in the future.
