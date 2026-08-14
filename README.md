@@ -30,8 +30,8 @@ as a download.
 
 Not super necessary since I got it running on Render
 
-Get a key at console.groq.com — free tier, no card needed. Each generation is two short
-API calls, so you'll get a lot of runs out of it before you'd hit any limit.
+Get a key at console.groq.com. This is the free tier, so no card needed. Each generation is two short
+API calls, so you'll get a lot of runs out of it before you'd hit any type of limit.
 
 ## Deploying
 
